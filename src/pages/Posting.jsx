@@ -3,18 +3,19 @@ import { collection, addDoc, onSnapshot, deleteDoc, doc } from 'firebase/firesto
 import styled from 'styled-components';
 import Header from '../components/Frame/Header';
 import Footer from '../components/Frame/Footer';
-// import Auth from './Auth';
-// import InputArea from './InputArea';
 import FileUpload from './FileUpload';
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
+import { v4 as uuid } from 'uuid';
 
 function Posting() {
+  const [newAbout, setNewAbout] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
+  const [newImgURL, setnewImgURL] = useState('');
   const [users, setUsers] = useState([]);
 
-  const userCollectionRef = collection(db, 'users');
+  const userCollectionRef = collection(db, 'fids');
 
   useEffect(() => {
     // 실시간 업데이트를 위한 onSnapshot 사용
@@ -32,28 +33,38 @@ function Posting() {
     };
   }, []);
 
-  const createUsers = async (event, downloadURL) => {
+  const createUsers = async (event, newImgURL) => {
     event.preventDefault();
-    if (downloadURL === undefined) return;
+    if (newImgURL === undefined) return;
 
     if (newTitle.trim() === '' || newContent.trim() === '') {
       alert('제목과 내용을 입력해주세요.');
       return;
     }
-    console.log(downloadURL);
-    await addDoc(userCollectionRef, { title: newTitle, content: newContent, profileImg: downloadURL });
+
+    await addDoc(userCollectionRef, {
+      id: uuid(),
+      about: newAbout,
+      title: newTitle,
+      contents: newContent,
+      createdBy: auth.currentUser.displayName,
+      createUser: auth.currentUser.email,
+      imgURL: newImgURL
+    });
 
     // 글 등록 후 입력 폼 초기화
+    setNewAbout('');
     setNewTitle('');
     setNewContent('');
+    setnewImgURL('');
   };
 
   const showUsers = users.map((value) => (
     <Tabs key={value.id}>
       <h1>{value.title}</h1>
-      <p>{value.content}</p>
+      <p>{value.contents}</p>
       <div>
-        <img src={value.profileImg} width="100" alt="프로필 이미지" />
+        <img src={value.imgURL} width="100" alt="프로필 이미지" />
       </div>
       <DeleteButton onClick={() => deleteUserData(value.id)}>삭제</DeleteButton>
     </Tabs>
@@ -61,13 +72,27 @@ function Posting() {
   const deleteUserData = async (id) => {
     if (window.confirm('정말로 삭제하시겠습니까?')) {
       try {
-        await deleteDoc(doc(db, 'users', id));
+        await deleteDoc(doc(db, 'fids', id));
         console.log('성공적으로 삭제되었습니다.');
       } catch (error) {
         console.error('사용자 삭제 중 오류 발생: ', error);
       }
     }
   };
+
+  // 카테고리 옵션 값 정의
+  const categoryOptions = [
+    '강아지',
+    '고양이',
+    '물고기',
+    '조류',
+    '파충류',
+    '양서류',
+    '기타',
+
+    ''
+    // ... 추가적인 카테고리 옵션들
+  ];
 
   return (
     <>
@@ -77,6 +102,16 @@ function Posting() {
         <Board>{showUsers}</Board>
         <InputForm onSubmit={createUsers}>
           <InputBody>
+            <TagI>
+              <Select value={newAbout} onChange={(e) => setNewAbout(e.target.value)}>
+                <option value="">카테고리를 선택해주세요.</option>
+                {categoryOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </TagI>
             <TagI>
               <TextareaT
                 type="text"
@@ -143,8 +178,18 @@ const InputForm = styled.form`
   margin-top: 10px;
 `;
 const TextareaT = styled.input`
-  width: 730px;
+  width: 360px;
   height: 30px;
+  border: 4px solid #eb9307;
+  border-radius: 16px;
+  margin-top: 10px;
+  font-size: 20px;
+  padding: 10px;
+  box-shadow: 10px 5px 20px gray;
+`;
+const Select = styled.select`
+  width: 360px;
+  height: 60px;
   border: 4px solid #eb9307;
   border-radius: 16px;
   margin-top: 10px;

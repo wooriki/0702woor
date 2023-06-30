@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storage, auth } from '../firebase';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import styled from 'styled-components';
 
 function FileUpload({ onImageUpload }) {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fileIndex, setFileIndex] = useState(1);
+
+  useEffect(() => {
+    // 이미지 업로드 후 파일 인덱스 증가
+    if (selectedFile) {
+      setFileIndex((prevIndex) => prevIndex + 1);
+    }
+  }, [selectedFile]);
 
   const handleFileSelect = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -12,7 +20,8 @@ function FileUpload({ onImageUpload }) {
 
   const handleUpload = async (e) => {
     if (selectedFile) {
-      const imageRef = ref(storage, `${auth.currentUser.uid}/${selectedFile.name}`);
+      const filename = `img${fileIndex}`;
+      const imageRef = ref(storage, `fids/${auth.currentUser.id}/${filename}`);
       await uploadBytes(imageRef, selectedFile);
 
       const downloadURL = await getDownloadURL(imageRef);
@@ -23,7 +32,7 @@ function FileUpload({ onImageUpload }) {
 
   return (
     <Body>
-      <FileUploader type="file" onChange={handleFileSelect} />
+      <FileUploader type="file" onChange={handleFileSelect} accept="image/*" />
       <RegisterBtn onClick={handleUpload}>등록하기</RegisterBtn>
     </Body>
   );

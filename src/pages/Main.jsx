@@ -8,14 +8,14 @@ import { MainWrapper } from '../stylecomponents/Wrapper';
 
 import BottomCardTab from '../components/BottomCardTab';
 import { useSelector } from 'react-redux';
+import CardList from '../components/CardList';
 
 // import { Link } from 'react-router-dom';
 
 function Main() {
   const user = useSelector((user) => user.currentuser);
-  console.log('유저정보:', user);
+  console.log('유저정보:' + user);
 
-  // alert(user.displayname + '님 반값습니다!');
   return (
     <>
       <MainWrapper>
@@ -32,13 +32,14 @@ function Main() {
             <BCTitle>사랑스런 친구들의 이야기</BCTitle>
           </div>
           <Cardsarea>
+            {/* <Card />
             <Card />
             <Card />
             <Card />
             <Card />
             <Card />
-            <Card />
-            <Card />
+            <Card /> */}
+            <CardList />
           </Cardsarea>
           <BottomCardTab />
         </MainBox>
